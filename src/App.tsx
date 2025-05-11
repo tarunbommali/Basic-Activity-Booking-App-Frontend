@@ -2,7 +2,8 @@ import {createBrowserRouter} from 'react-router-dom';
 import Login from './pages/Login';
 import {AppLayout} from './components/AppLayout';
 import Home from './pages/Home';
-
+import Bookings from './pages/Bookings';
+import HostActivities from './pages/HostActivities'
 
 const routes = [
   {
@@ -16,6 +17,14 @@ const routes = [
       {
         path: "/",
         element: <Home />
+      },
+      {
+        path: "/bookings",
+        element: <Bookings/>
+      },
+      {
+        path:"/activities",
+        element: <HostActivities/>
       }
   ]
   }

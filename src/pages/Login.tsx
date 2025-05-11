@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { BACKEND_URL } from "../utils/constants";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 type FormData = {
   name: string;
@@ -28,6 +29,8 @@ const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState<Errors>({});
   const [message, setMessage] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const validate = (): Errors => {
     const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -49,14 +52,15 @@ const Login = () => {
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const validationErrors = validate();
-
     if (Object.keys(validationErrors).length > 0) {
       setError(validationErrors);
       return;
     }
 
     setError({});
-    setMessage(""); // Clear previous message
+    setMessage("");
+    setIsLoading(true);
+
 
     try {
       if (isLogin) {
@@ -83,6 +87,9 @@ const Login = () => {
       }
 
       setFormData({ name: "", email: "", password: "", phone: "" });
+
+      // Navigate to home after short delay
+      setTimeout(() => navigate("/"), 1000);
     } catch (err: any) {
       if (err.response && err.response.data?.message) {
         setMessage(`❌ ${err.response.data.message}`);
@@ -90,6 +97,8 @@ const Login = () => {
         console.error("Network/server error", err);
         setMessage(err.message);
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -170,8 +179,14 @@ const Login = () => {
           </div>
         )}
 
-        <button className="bg-blue-600 px-6 rounded-3xl py-2 my-4 text-white">
-          {isLogin ? "Login" : "Sign Up"}
+        <button
+          type="submit"
+          disabled={isLoading}
+          className={`bg-blue-600 px-6 rounded-3xl py-2 my-4 text-white ${
+            isLoading ? "opacity-50 cursor-not-allowed" : ""
+          }`}
+        >
+          {isLoading ? "Processing..." : isLogin ? "Login" : "Sign Up"}
         </button>
 
         <p
