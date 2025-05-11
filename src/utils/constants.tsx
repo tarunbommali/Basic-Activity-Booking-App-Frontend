@@ -1,0 +1,1 @@
+export const BACKEND_URL = 'https://basic-activity-booking-app-02p3.onrender.com/'

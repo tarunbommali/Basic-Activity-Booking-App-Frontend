@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { BACKEND_URL } from "../utils/constants";
+import axios from "axios";
 
 type FormData = {
   name: string;
@@ -22,8 +24,9 @@ const Login = () => {
     phone: "",
   });
 
-  const [isLogin, setIsLogin] = useState(true); // true = login, false = signup
+  const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState<Errors>({});
+  const [message, setMessage] = useState("");
 
   const validate = (): Errors => {
     const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -32,8 +35,7 @@ const Login = () => {
     if (!formData.email.trim()) newErrors.email = "Email is required";
     else if (!regex.test(formData.email)) newErrors.email = "Invalid email";
 
-    if (!formData.password.trim())
-      newErrors.password = "Password is required";
+    if (!formData.password.trim()) newErrors.password = "Password is required";
 
     if (!isLogin) {
       if (!formData.name.trim()) newErrors.name = "Name is required";
@@ -43,25 +45,52 @@ const Login = () => {
     return newErrors;
   };
 
-  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setMessage("");
     const validationErrors = validate();
 
     if (Object.keys(validationErrors).length > 0) {
       setError(validationErrors);
-    } else {
-      setError({});
+      return;
+    }
+
+    setError({});
+
+    try {
       if (isLogin) {
-        console.log("Logging in with", formData.email, formData.password);
+        const response = await axios.post(
+          `${BACKEND_URL}/auth/login`,
+          {
+            email: formData.email,
+            password: formData.password,
+          },
+          { withCredentials: true }
+        );
+        setMessage("✅ Login successful!");
       } else {
-        console.log("Signing up with", formData);
+        const response = await axios.post(`${BACKEND_URL}/auth/signup`, {
+          name: formData.name,
+          email: formData.email,
+          phoneNumber: formData.phone,
+          password: formData.password,
+        });
+        setMessage("✅ Signup successful!");
+        setIsLogin(true);
       }
+
       setFormData({ name: "", email: "", password: "", phone: "" });
+    } catch (err: any) {
+      if (err.response && err.response.data.message) {
+        setMessage("❌ " + err.response.data.message);
+      } else {
+        setMessage("❌ Something went wrong. Please try again later.");
+      }
     }
   };
 
   return (
-    <div className="flex flex-col justify-center text-sm md:text-xl font-thin items-center">
+    <div className="flex flex-col justify-center text-sm md:text-xl font-thin items-center min-h-screen">
       <form
         onSubmit={handleFormSubmit}
         className="flex flex-col shadow-2xl p-4 rounded-2xl w-full md:w-[400px] bg-white"
@@ -144,7 +173,11 @@ const Login = () => {
         </button>
 
         <p
-          onClick={() => setIsLogin(!isLogin)}
+          onClick={() => {
+            setIsLogin(!isLogin);
+            setMessage("");
+            setError({});
+          }}
           className="text-sm text-blue-600 cursor-pointer text-center"
         >
           {isLogin
@@ -152,6 +185,17 @@ const Login = () => {
             : "Already have an account? Login"}
         </p>
       </form>
+
+      {/* 🔔 Message display */}
+      {message && (
+        <p
+          className={`mt-4 text-center font-medium ${
+            message.startsWith("✅") ? "text-green-600" : "text-red-600"
+          }`}
+        >
+          {message}
+        </p>
+      )}
     </div>
   );
 };
