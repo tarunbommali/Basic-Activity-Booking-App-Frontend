@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { BACKEND_URL } from "../utils/constants";
 import axios from "axios";
@@ -26,7 +27,7 @@ const Login = () => {
 
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState<Errors>({});
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<string>("");
 
   const validate = (): Errors => {
     const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -47,7 +48,6 @@ const Login = () => {
 
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setMessage("");
     const validationErrors = validate();
 
     if (Object.keys(validationErrors).length > 0) {
@@ -56,6 +56,7 @@ const Login = () => {
     }
 
     setError({});
+    setMessage(""); // Clear previous message
 
     try {
       if (isLogin) {
@@ -67,6 +68,7 @@ const Login = () => {
           },
           { withCredentials: true }
         );
+        console.log("Login successful", response.data);
         setMessage("✅ Login successful!");
       } else {
         const response = await axios.post(`${BACKEND_URL}/auth/signup`, {
@@ -75,22 +77,24 @@ const Login = () => {
           phoneNumber: formData.phone,
           password: formData.password,
         });
+        console.log("Signup successful", response.data);
         setMessage("✅ Signup successful!");
         setIsLogin(true);
       }
 
       setFormData({ name: "", email: "", password: "", phone: "" });
     } catch (err: any) {
-      if (err.response && err.response.data.message) {
-        setMessage("❌ " + err.response.data.message);
+      if (err.response && err.response.data?.message) {
+        setMessage(`❌ ${err.response.data.message}`);
       } else {
+        console.error("Network/server error", err);
         setMessage("❌ Something went wrong. Please try again later.");
       }
     }
   };
 
   return (
-    <div className="flex flex-col justify-center text-sm md:text-xl font-thin items-center min-h-screen">
+    <div className="flex flex-col justify-center text-sm md:text-xl font-thin items-center">
       <form
         onSubmit={handleFormSubmit}
         className="flex flex-col shadow-2xl p-4 rounded-2xl w-full md:w-[400px] bg-white"
@@ -119,7 +123,6 @@ const Login = () => {
           </div>
         )}
 
-        {/* Email */}
         <div className="flex flex-col">
           <label htmlFor="email">Email</label>
           <input
@@ -135,7 +138,6 @@ const Login = () => {
           {error.email && <p className="text-red-500">{error.email}</p>}
         </div>
 
-        {/* Password */}
         <div className="flex flex-col">
           <label htmlFor="password">Password</label>
           <input
@@ -186,11 +188,10 @@ const Login = () => {
         </p>
       </form>
 
-      {/* 🔔 Message display */}
       {message && (
         <p
-          className={`mt-4 text-center font-medium ${
-            message.startsWith("✅") ? "text-green-600" : "text-red-600"
+          className={`mt-4 text-center text-sm ${
+            message.includes("✅") ? "text-green-600" : "text-red-600"
           }`}
         >
           {message}
