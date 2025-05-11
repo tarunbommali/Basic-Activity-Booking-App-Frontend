@@ -61,7 +61,7 @@ const Login = () => {
     try {
       if (isLogin) {
         const response = await axios.post(
-          `${BACKEND_URL}/auth/login`,
+          `${BACKEND_URL}auth/login`,
           {
             email: formData.email,
             password: formData.password,
@@ -71,7 +71,7 @@ const Login = () => {
         console.log("Login successful", response.data);
         setMessage("✅ Login successful!");
       } else {
-        const response = await axios.post(`${BACKEND_URL}/auth/signup`, {
+        const response = await axios.post(`${BACKEND_URL}auth/signup`, {
           name: formData.name,
           email: formData.email,
           phoneNumber: formData.phone,
@@ -88,7 +88,7 @@ const Login = () => {
         setMessage(`❌ ${err.response.data.message}`);
       } else {
         console.error("Network/server error", err);
-        setMessage("❌ Something went wrong. Please try again later.");
+        setMessage(err.message);
       }
     }
   };
